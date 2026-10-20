@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+output/
+.playwright-cli/
+public/runtime/
+public/licenses/THIRD-PARTY-NOTICES.txt
+.DS_Store

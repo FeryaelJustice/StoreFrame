@@ -1,0 +1,56 @@
+async (page) => {
+  await page.goto('http://127.0.0.1:4322/es/');
+  const failures = [];
+  const requests = [];
+  const check = (condition, message) => { if (!condition) { failures.push(message); throw new Error(message); } };
+  page.on('request', req => { requests.push({ method: req.method(), url: req.url().split('?')[0], body: req.postData() }); });
+  await page.getByRole('textbox', { name: 'Nombre de la app opcional' }).fill('Prueba Ágil');
+  await page.getByRole('checkbox', { name: 'iOS / iPhone' }).check();
+  await page.locator('input[type=file]').setInputFiles(Array.from({ length: 8 }, (_, i) => `output/playwright/fixtures/screen-${i + 1}.png`));
+  await page.locator('.shot-card').nth(7).waitFor();
+  await page.getByRole('textbox', { name: 'Primary hex', exact: true }).fill('#1234ab');
+  await page.getByRole('textbox', { name: 'Secondary hex', exact: true }).fill('#f0cb42');
+  await page.getByRole('textbox', { name: 'Texto de esta captura 1', exact: true }).fill('Primera pantalla\nTu historia empieza aquí.');
+  await page.getByRole('textbox', { name: 'Texto de esta captura 2', exact: true }).fill('Segunda pantalla horizontal.');
+  await page.getByRole('button', { name: 'Mover después 1', exact: true }).click();
+  check(await page.getByRole('textbox', { name: 'Texto de esta captura 1', exact: true }).inputValue() === 'Segunda pantalla horizontal.', 'Caption must move with its image');
+  await page.getByRole('button', { name: 'Generar capturas', exact: true }).click();
+  await page.getByRole('button', { name: 'Descargar ZIP', exact: true }).waitFor({ timeout: 60000 });
+  check(await page.locator('.result-grid figure').count() === 16, 'Expected 16 actual rendered results');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar ZIP', exact: true }).click();
+  const download = await downloadPromise; await download.saveAs('output/playwright/mixed-eight.zip');
+  check(download.suggestedFilename() === 'prueba-agil_screenshots.zip', 'ZIP filename normalization');
+  await page.getByRole('textbox', { name: 'Texto de esta captura 1', exact: true }).fill('Actualizado');
+  check(await page.locator('.result-grid').count() === 0, 'Edits must invalidate old exports');
+  await page.getByRole('textbox', { name: 'Texto de esta captura 1', exact: true }).fill('W'.repeat(500));
+  await page.getByRole('button', { name: 'Generar capturas', exact: true }).click();
+  await page.getByRole('alert').waitFor();
+  check((await page.getByRole('alert').innerText()).includes('no cabe'), 'Long captions must fail visibly');
+  await page.getByRole('textbox', { name: 'Texto de esta captura 1', exact: true }).fill('Horizontal, completa.');
+  await page.locator('input[type=file]').setInputFiles('output/playwright/fixtures/screen-9.png');
+  await page.getByRole('alert').waitFor();
+  check(await page.locator('.shot-card').count() === 8, 'Ninth image must be rejected');
+  await page.locator('.shot-actions .remove').last().click();
+  await page.locator('input[type=file]').setInputFiles('output/playwright/fixtures/corrupt.png');
+  await page.getByRole('alert').waitFor();
+  check(await page.locator('.shot-card').count() === 7, 'Corrupt image must be rejected');
+  await page.locator('input[type=file]').setInputFiles('output/playwright/fixtures/unsupported.txt');
+  await page.getByRole('alert').waitFor();
+  check(await page.locator('.shot-card').count() === 7, 'Unsupported file must be rejected');
+  await page.getByRole('checkbox', { name: 'Android', exact: true }).uncheck();
+  await page.context().setOffline(true);
+  try {
+    await page.getByRole('button', { name: 'Generar capturas', exact: true }).click();
+    await page.getByRole('button', { name: 'Descargar ZIP', exact: true }).waitFor({ timeout: 60000 });
+    check(await page.locator('.result-grid figure').count() === 7, 'Offline iOS template exports must succeed');
+    const pending = page.waitForEvent('download'); await page.getByRole('button', { name: 'Descargar ZIP', exact: true }).click();
+    await (await pending).saveAs('output/playwright/offline-ios.zip');
+  } finally { await page.context().setOffline(false); }
+  check(!requests.some(req => req.method !== 'GET' && req.method !== 'HEAD'), 'No screenshot or caption uploads');
+  check(!requests.some(req => !req.url.startsWith('http://127.0.0.1:4322/') && !req.url.startsWith('blob:http://127.0.0.1:4322/')), 'Template workflow should make no third-party requests');
+  await page.setViewportSize({ width: 390, height: 844 });
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile must have no horizontal overflow');
+  await page.screenshot({ path: 'output/playwright/mobile-editor.png', fullPage: true });
+  console.log(JSON.stringify({ success: true, exportedBoth: 16, offlineIos: 7, capturedRequests: requests.length, failures }));
+}

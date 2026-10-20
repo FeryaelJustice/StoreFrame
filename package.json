@@ -1,0 +1,37 @@
+{
+  "name": "storeframe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.22.0" },
+  "scripts": {
+    "predev": "node scripts/prepare-runtime.mjs",
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "node scripts/prepare-runtime.mjs && astro build && node scripts/check-dist.mjs",
+    "preview": "astro preview --host 127.0.0.1",
+    "serve": "node scripts/serve.mjs",
+    "check": "astro check",
+    "test": "vitest run",
+    "prepare:runtime": "node scripts/prepare-runtime.mjs"
+  },
+  "dependencies": {
+    "@astrojs/react": "7.1.0",
+    "@huggingface/transformers": "4.3.1",
+    "astro": "7.4.1",
+    "fast-png": "8.0.0",
+    "fflate": "0.8.3",
+    "flux-klein.js": "0.7.0",
+    "onnxruntime-web": "1.30.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.11",
+    "@playwright/cli": "0.1.22",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@webgpu/types": "0.1.74",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

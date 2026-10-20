@@ -1,0 +1,22 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { pageSlugs, pageContent, type PageKey } from '../../lib/pages';
+import { copy } from '../../lib/i18n';
+import type { Lang } from '../../lib/project';
+export function getStaticPaths() { return (['es', 'en'] as const).flatMap(lang => Object.entries(pageSlugs[lang]).map(([key, page]) => ({ params: { lang, page }, props: { pageKey: key } }))); }
+const lang = Astro.params.lang as Lang; const key = Astro.props.pageKey as PageKey; const t = copy[lang];
+const title = t[key]; const other = lang === 'es' ? 'en' : 'es';
+---
+<Layout lang={lang} title={`${title} - StoreFrame`} alternatePath={`${pageSlugs[other][key]}/`}>
+  <article class="wrap prose">
+    <a class="text-button" href={`/${lang}/`}>← {t.back}</a>
+    <span class="eyebrow">STOREFRAME</span><h1>{title}</h1>
+    {pageContent(lang, key).map(section => <section><h2>{section.heading}</h2>{section.paragraphs.map(text => <p>{text}</p>)}</section>)}
+    {key === 'licenses' && <section>
+      <p><a href="/licenses/THIRD-PARTY-NOTICES.txt" download>{lang === 'es' ? 'Descargar avisos y licencias de dependencias' : 'Download third-party notices and licenses'}</a></p>
+      <p><a href="/licenses/MODEL-NOTICE.txt">{lang === 'es' ? 'Procedencia y revisión del modelo' : 'Model provenance and revision'}</a></p>
+      <p><a href="/licenses/FLUX.2-klein-4B-LICENSE.txt">FLUX.2 klein 4B: Apache License 2.0</a></p>
+    </section>}
+    {key === 'tool' && <p><a href="https://support.google.com/googleplay/android-developer/answer/9866151?hl=en">Google Play: screenshots</a> · <a href="https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/">App Store: screenshot specifications</a></p>}
+  </article>
+</Layout>

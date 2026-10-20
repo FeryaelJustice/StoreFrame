@@ -1,0 +1,59 @@
+---
+import '../styles/global.css';
+import { copy } from '../lib/i18n';
+import type { Lang } from '../lib/project';
+interface Props { lang: Lang; title?: string; description?: string; alternatePath?: string; }
+const { lang, title = copy[lang].seo, description = copy[lang].description, alternatePath = '' } = Astro.props;
+const t = copy[lang]; const other = lang === 'es' ? 'en' : 'es';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const otherUrl = new URL(`/${other}/${alternatePath}`, Astro.site);
+const pages = lang === 'es' ? ['privacidad', 'aviso-legal', 'sobre-nosotros', 'herramienta', 'licencias'] : ['privacy', 'legal', 'about', 'tool', 'licenses'];
+const labels = [t.privacy, t.legal, t.about, t.tool, t.licenses];
+---
+<!doctype html>
+<html lang={lang} data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <script is:inline>
+      try {
+        const saved = localStorage.getItem('storeframe-theme');
+        document.documentElement.dataset.theme = saved === 'light' ? 'light' : 'dark';
+      } catch { document.documentElement.dataset.theme = 'dark'; }
+    </script><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title><meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" /><link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang} href={canonical} /><link rel="alternate" hreflang={other} href={otherUrl} /><link rel="alternate" hreflang="x-default" href={new URL('/es/', Astro.site)} />
+    <meta property="og:type" content="website" /><meta property="og:site_name" content="StoreFrame" /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta property="og:image" content={new URL('/social.png', Astro.site)} /><meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" /><meta name="theme-color" content="#244d42" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>
+    <header class="site-header wrap"><a class="brand" href={`/${lang}/`} aria-label="StoreFrame"><svg width="27" height="33" viewBox="0 0 27 33" fill="none" aria-hidden="true"><rect x="3" y="2" width="21" height="29" rx="4" stroke="currentColor" stroke-width="2" /><path d="M9 23h9M11 7h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg><span>StoreFrame<span class="brand-dot">.</span></span></a><nav aria-label={lang === 'es' ? 'Navegación principal' : 'Main navigation'}><a href={`/${lang}/#studio`}>{t.navEditor}</a><a href={`/${lang}/#how`}>{t.navHow}</a><a href={`/${lang}/#faq`}>{t.navFaq}</a></nav><div class="header-actions"><button type="button" class="theme-toggle" data-theme-toggle aria-label={t.darkMode} aria-pressed="true" data-light-label={t.lightMode} data-dark-label={t.darkMode}>
+      <svg class="theme-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/></svg>
+      <svg class="theme-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.5 14A8.6 8.6 0 0 1 10 3.5 8.6 8.6 0 1 0 20.5 14Z"/></svg>
+      <span class="theme-sun">{t.lightMode}</span><span class="theme-moon">{t.darkMode}</span>
+    </button><a class="language" href={`/${other}/${alternatePath}`} hreflang={other} aria-label={lang === 'es' ? 'Switch to English' : 'Cambiar a español'}><span>{lang.toUpperCase()}</span><span aria-hidden="true"> / </span><span>{other.toUpperCase()}</span></a></div></header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer"><div class="wrap"><div class="footer-top"><div><a class="brand" href={`/${lang}/`}>StoreFrame<span class="brand-dot">.</span></a><p>{t.footerLine}</p></div><div class="footer-links">{pages.map((page, i) => <a href={`/${lang}/${page}/`}>{labels[i]}</a>)}</div></div><div class="footer-bottom"><span>© <span data-year>{new Date().getFullYear()}</span> StoreFrame</span><span>{t.made}</span></div></div></footer>
+    <script>
+      document.querySelectorAll('[data-year]').forEach(el => el.textContent = String(new Date().getFullYear()));
+      const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+      function applyTheme(theme: string) {
+        const dark = theme !== 'light';
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        toggle?.setAttribute('aria-pressed', String(dark));
+        if (toggle) toggle.title = (dark ? toggle.dataset.lightLabel : toggle.dataset.darkLabel) || '';
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#111814' : '#faf9f5');
+      }
+      applyTheme(document.documentElement.dataset.theme || 'dark');
+      toggle?.addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(theme);
+        try { localStorage.setItem('storeframe-theme', theme); } catch { /* The theme still works when storage is blocked. */ }
+      });
+      window.addEventListener('storage', event => {
+        if (event.key === 'storeframe-theme' || event.key === null) applyTheme(event.newValue || 'dark');
+      });
+    </script>
+  </body>
+</html>

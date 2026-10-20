@@ -1,0 +1,18 @@
+StoreFrame model provenance
+
+Original model: FLUX.2 klein 4B
+Publisher: Black Forest Labs
+Original license: Apache License 2.0
+Original source: https://huggingface.co/black-forest-labs/FLUX.2-klein-4B
+License copy: FLUX.2-klein-4B-LICENSE.txt in this directory.
+
+Browser adaptation: radames/flux2-klein-edge-web
+Revision: e8f306c29bae4ea18a4d81a3d79507d91e05e94f
+Quantization and ONNX browser export: radames
+Source: https://huggingface.co/radames/flux2-klein-edge-web
+The adaptation model card links its model license to the original Apache 2.0 license.
+
+The weights are downloaded separately when the visitor opts into local AI.
+The site does not bundle or modify the weight files. A private hosting mirror
+must preserve their licenses, provenance and notices. No LoRA is enabled.
+No endorsement by Black Forest Labs or the adaptation's author is implied.
